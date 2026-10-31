@@ -41,7 +41,8 @@ function placeholder(category) {
 }
 
 /** Feed-provided image hot-linked with no referrer; falls back to a category placeholder if it fails. */
-function storyMedia(story, className = "story-media") {
+function storyMedia(story, className = "story-media", always = false) {
+  if (!story.image_url && !always) return null; // text-first card: no filler block
   const wrapper = element("div", className);
   wrapper.append(placeholder(story.category));
   if (story.image_url) {
@@ -67,11 +68,13 @@ function relativeUpdate(value) {
 
 const CREDIBILITY_MARKS = { high: "●", medium: "◐", low: "○" };
 
-function credibilityBadge(label) {
+function credibilityBadge(label, verbose = false) {
   const badge = element("span", `credibility ${label.toLowerCase()}`);
   const mark = element("span", "", CREDIBILITY_MARKS[label.toLowerCase()]);
   mark.setAttribute("aria-hidden", "true");
-  badge.append(mark, document.createTextNode(` ${label} credibility`));
+  badge.append(mark, document.createTextNode(verbose ? ` ${label} credibility` : ` ${label}`));
+  badge.setAttribute("aria-label", `${label} credibility`);
+  badge.title = `${label} credibility: based on source tier and how many outlets report it`;
   return badge;
 }
 
@@ -94,7 +97,9 @@ function makeCategoryNav(selected) {
 function makeStoryCard(story, featured = false) {
   const card = element("article", `story-card ${categoryClass(story.category)}${featured ? " featured" : ""}`);
   const titleHref = `/story/${encodeURIComponent(story.id)}`;
-  card.append(storyMedia(story));
+  const media = storyMedia(story, "story-media", featured);
+  if (media) card.append(media);
+  else card.classList.add("no-image");
 
   const body = element("div", "story-body");
   const meta = element("div", "story-meta");
@@ -147,6 +152,7 @@ async function loadStoryList(container, filters, cursor = 0) {
     const featured = cursor === 0 && index === 0 && currentFilters.sort === "importance" && !currentFilters.q;
     container.append(makeStoryCard(story, featured));
   });
+  container.removeAttribute("aria-busy");
   const counter = document.querySelector("#result-count");
   if (counter) counter.textContent = `${result.total} ${result.total === 1 ? "story" : "stories"}`;
 
@@ -237,6 +243,13 @@ function renderDashboard(category = null) {
   const list = element("div", "story-list");
   list.id = "story-list";
   list.setAttribute("aria-live", "polite");
+  list.setAttribute("aria-busy", "true");
+  for (let i = 0; i < 6; i += 1) {
+    const skeleton = element("div", "story-card skeleton");
+    skeleton.setAttribute("aria-hidden", "true");
+    skeleton.append(element("span", "skeleton-line short"), element("span", "skeleton-line"), element("span", "skeleton-line"), element("span", "skeleton-line mid"));
+    list.append(skeleton);
+  }
   body.append(list);
   const empty = element("div", "empty-state", "No stories match these filters. If the app has just started, sources are still being fetched; refresh in a minute, or try another date range.");
   empty.id = "empty-state";
@@ -312,10 +325,10 @@ async function renderStory(id) {
     if (!response.ok) throw new Error(response.status === 404 ? "This story could not be found." : "The story could not be loaded.");
     const story = await response.json();
     const article = element("article", "article");
-    article.append(storyMedia(story, "article-hero"));
+    article.append(storyMedia(story, "article-hero", true));
     const meta = element("div", "story-meta");
     meta.append(element("span", "category-tag", story.category));
-    meta.append(credibilityBadge(story.credibility_label));
+    meta.append(credibilityBadge(story.credibility_label, true));
     meta.append(element("span", "", formatTime(story.published_at)));
     article.append(meta, element("h1", "", story.title));
     document.title = `${story.title} · AI News Platform`;

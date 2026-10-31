@@ -85,6 +85,15 @@ class IntelligenceTests(unittest.TestCase):
         self.assertLess(similarity(a, c), 0.2)
 
 
+class EditorialTests(unittest.TestCase):
+    def test_low_value_titles_are_recognised(self):
+        from shared.editorial import is_low_value
+        for title in ("Last-minute Halloween costumes for tech nerds", "Video Friday: Spot Plays", "Best laptops to buy in 2026"):
+            self.assertTrue(is_low_value(title), title)
+        for title in ("OpenAI releases a new model", "Regulators open consultation on AI transparency"):
+            self.assertFalse(is_low_value(title), title)
+
+
 class RegistryTests(unittest.TestCase):
     def test_shipped_registry_is_valid_and_https_only(self):
         sources = load_registry()

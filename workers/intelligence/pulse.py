@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 
 from api.store import connection
+from shared.editorial import is_low_value
 from shared.security.prompt_guard import (
     UnsafeOutput,
     clean_model_text,
@@ -51,13 +52,6 @@ PRICE_OUT_PER_M = float(os.getenv("PULSE_PRICE_OUTPUT_PER_M", "0.60"))
 PRIMARY_SOURCE_BONUS = 0.10
 CORROBORATION_BONUS = 0.05  # per extra independent source, up to two
 LOW_VALUE_PENALTY = 0.30
-LOW_VALUE = re.compile(
-    r"\b(costumes?|halloween|black friday|cyber monday|gift guides?|deals?|coupons?|giveaways?|horoscopes?|quiz|"
-    r"podcast|newsletter|video friday|week in review|weekly roundup|roundup|best [\w\s-]{0,30}(to buy|of 20\d\d)|"
-    r"how to [\w\s-]{0,20}(your|a)\b)",
-    re.I,
-)
-
 _lock = threading.Lock()
 
 
@@ -85,7 +79,7 @@ class Candidate:
         if self.best_tier == 1:
             score += PRIMARY_SOURCE_BONUS
         score += CORROBORATION_BONUS * min(max(self.source_count - 1, 0), 2)
-        if LOW_VALUE.search(self.title):
+        if is_low_value(self.title):
             score -= LOW_VALUE_PENALTY
         return score
 

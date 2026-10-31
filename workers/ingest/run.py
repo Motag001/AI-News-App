@@ -13,6 +13,7 @@ from api.store import connection
 from shared.config.registry import Source, load_registry
 from workers.ingest.http import FetchError, guarded_get
 from workers.ingest.normalise import Item, parse_feed
+from shared.editorial import is_low_value
 from workers.intelligence.classify import classify
 from workers.intelligence.dedup import find_story
 from workers.intelligence.scoring import credibility_score, importance_score
@@ -23,6 +24,7 @@ log = logging.getLogger("ingest")
 BACKFILL_DAYS = 7          # DATA_SOURCES.md section 5
 MAX_ITEMS_PER_RUN = 30     # newest items per source per run
 RESCORE_DAYS = 30
+LOW_VALUE_PENALTY = 0.15  # listicles and roundups sink in the importance ranking
 RETENTION_DAYS = int(os.getenv("RETENTION_DAYS", "30"))  # stories older than this are deleted
 NEUTRAL_REACH = 0.5        # no reach metrics are available from feeds
 DOMAIN_GAP_SECONDS = int(os.getenv("INGEST_DOMAIN_GAP_SECONDS", "10"))  # 1 request per 10 s per domain by default
@@ -115,6 +117,8 @@ def rescore(database, now: datetime) -> None:
             datetime.fromisoformat(published), NEUTRAL_REACH, credibility, story["category"], now
         )
         lead = rows[0]  # lowest tier (most primary) source supplies title and summary
+        if is_low_value(lead["title"]):
+            importance = round(max(importance - LOW_VALUE_PENALTY, 0.0), 4)
         summary = extractive_summary(max((row["excerpt"] for row in rows if row["tier"] == lead["tier"]),
                                          key=len, default=""))
         database.execute(
