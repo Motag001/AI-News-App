@@ -206,16 +206,20 @@ def row_to_summary(row) -> dict:
 
 REFRESH_INTERVAL_SECONDS = 15 * 60
 _refresh_lock = threading.Lock()
-_last_refresh = 0.0
+_last_refresh: float | None = None
+
+
+def _is_fresh() -> bool:
+    return _last_refresh is not None and time.monotonic() - _last_refresh < REFRESH_INTERVAL_SECONDS
 
 
 def refresh_if_stale() -> None:
     """Serverless has no background worker: fetch due sources on demand, at most every 15 minutes per instance."""
     global _last_refresh
-    if not ON_VERCEL or time.monotonic() - _last_refresh < REFRESH_INTERVAL_SECONDS:
+    if not ON_VERCEL or _is_fresh():
         return
     with _refresh_lock:  # concurrent first visitors wait for one refresh instead of starting several
-        if time.monotonic() - _last_refresh < REFRESH_INTERVAL_SECONDS:
+        if _is_fresh():
             return
         try:
             initialise_database()
