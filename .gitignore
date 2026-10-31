@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+data/
+*.db
+*.db-wal
+*.db-shm
+*.log
+node_modules/
+dist/
+.claude/settings.local.json
+.claude/*.local.*

@@ -1,0 +1,129 @@
+# Approved sources. Only entries with status: active are fetched.
+# Approved by the project owner on 2026-10-31. Every source below is a public,
+# documented feed or API; only titles, short excerpts and links are stored.
+# See DATA_SOURCES.md for the approval rules.
+
+- id: arxiv-ai
+  name: arXiv cs.AI
+  type: research
+  url: https://export.arxiv.org/api/query?search_query=cat:cs.AI&sortBy=submittedDate&sortOrder=descending&max_results=25
+  owner: project-owner
+  tier: 1
+  status: active
+  schedule_minutes: 180
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://info.arxiv.org/help/api/tou.html"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+  attribution: "Thank you to arXiv for use of its open access interoperability."
+  category_hint: Research
+
+- id: arxiv-robotics
+  name: arXiv cs.RO
+  type: research
+  url: https://export.arxiv.org/api/query?search_query=cat:cs.RO&sortBy=submittedDate&sortOrder=descending&max_results=25
+  owner: project-owner
+  tier: 1
+  status: active
+  schedule_minutes: 180
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://info.arxiv.org/help/api/tou.html"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+  attribution: "Thank you to arXiv for use of its open access interoperability."
+  category_hint: Research
+
+- id: openai-news
+  name: OpenAI News
+  type: rss
+  url: https://openai.com/news/rss.xml
+  owner: project-owner
+  tier: 1
+  status: active
+  schedule_minutes: 60
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://openai.com/news/rss.xml"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+
+- id: deepmind-blog
+  name: Google DeepMind
+  type: rss
+  url: https://deepmind.google/blog/rss.xml
+  owner: project-owner
+  tier: 1
+  status: active
+  schedule_minutes: 60
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://deepmind.google/blog/rss.xml"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+
+- id: google-ai-blog
+  name: Google AI Blog
+  type: rss
+  url: https://blog.google/technology/ai/rss/
+  owner: project-owner
+  tier: 1
+  status: active
+  schedule_minutes: 60
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://blog.google/technology/ai/rss/"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+
+- id: mit-tech-review-ai
+  name: MIT Technology Review (AI)
+  type: rss
+  url: https://www.technologyreview.com/topic/artificial-intelligence/feed
+  owner: project-owner
+  tier: 2
+  status: active
+  schedule_minutes: 60
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://www.technologyreview.com/topic/artificial-intelligence/feed"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+
+- id: ieee-spectrum-robotics
+  name: IEEE Spectrum Robotics
+  type: rss
+  url: https://spectrum.ieee.org/feeds/topic/robotics.rss
+  owner: project-owner
+  tier: 2
+  status: active
+  schedule_minutes: 60
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://spectrum.ieee.org/feeds/topic/robotics.rss"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
+  category_hint: Robotics
+
+- id: techcrunch-ai
+  name: TechCrunch AI
+  type: rss
+  url: https://techcrunch.com/category/artificial-intelligence/feed/
+  owner: project-owner
+  tier: 2
+  status: active
+  schedule_minutes: 60
+  rate_limit_per_minute: 6
+  allowed_paths: []
+  terms_checked_on: 2026-10-31
+  terms_reference: "https://techcrunch.com/category/artificial-intelligence/feed/"
+  copyright_position: excerpts_and_links
+  contact: https://github.com/Motag001/AI-News-App/issues
