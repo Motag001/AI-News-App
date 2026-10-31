@@ -18,12 +18,15 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from api.pulse import build_router as build_pulse_router
 from api.store import connection, initialise_database
 from shared.categories import CATEGORIES
 from workers.ingest.run import run_due
+from workers.intelligence.pulse import run_scheduled as run_pulse
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -55,6 +58,7 @@ async def ingest_loop() -> None:
     while True:
         try:
             results = await asyncio.to_thread(run_due)
+            await asyncio.to_thread(run_pulse)
             if results:
                 log.info("ingest run: %s", results)
         except Exception:
@@ -107,6 +111,7 @@ async def validation_problem(_: Request, exc: RequestValidationError) -> JSONRes
 _default_hosts = f"localhost,127.0.0.1,{parsed_app_url.hostname}" + (",*.vercel.app" if ON_VERCEL else "")
 ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", _default_hosts).split(",") if host.strip()]
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)  # blocks Host-header spoofing
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "120"))
 _recent_requests: dict[str, deque] = defaultdict(deque)
@@ -142,6 +147,14 @@ async def security_headers(request: Request, call_next) -> Response:
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-Frame-Options"] = "DENY"
+    if request.method == "GET" and response.status_code == 200 and "cache-control" not in response.headers:
+        path = request.url.path
+        if path.startswith("/assets/"):
+            response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=3600"
+        elif path.startswith("/api/v1/pulse/"):
+            response.headers["Cache-Control"] = "public, max-age=300"  # one edition per day
+        elif path in {"/api/v1/stories", "/api/v1/categories"} or path.startswith("/api/v1/stories/"):
+            response.headers["Cache-Control"] = "public, max-age=60"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=(), payment=()"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
@@ -227,6 +240,9 @@ def refresh_if_stale() -> None:
             _last_refresh = time.monotonic()
         except Exception:
             log.exception("on-demand refresh failed")
+
+
+app.include_router(build_pulse_router(refresh_if_stale))
 
 
 @app.get("/api/v1/health")
@@ -383,5 +399,7 @@ def share_links(story_id: str) -> dict[str, str]:
 @app.get("/story/{story_id}", include_in_schema=False)
 @app.get("/category/{category}", include_in_schema=False)
 @app.get("/settings", include_in_schema=False)
+@app.get("/pulse", include_in_schema=False)
+@app.get("/pulse/{edition_date}", include_in_schema=False)
 def index(request: Request) -> FileResponse:
     return FileResponse(WEB_ROOT / "index.html")

@@ -122,6 +122,13 @@ Errors: RFC 7807 problem+json.
 - Validates categories against the category list, date range against allowed values, density against enum.
 - Stores in `user_settings`.
 
+### 3.13 AI Pulse (`workers/intelligence/pulse.py`, `api/pulse.py`)
+- `select_stories()` picks up to five stories from `story` (importance, credibility, recency, novelty against earlier editions, topical diversity). `ensure_edition(date)` builds the day's edition once; `force=True` is the operator refresh.
+- `LlmClient.complete_json(system, user, max_tokens)` (`workers/intelligence/llm.py`) is the OpenAI adapter. Input is delimited and labelled untrusted; output must pass `validate_output()` (exact ids/order, word limits, plain text only). Without a key, `build_extractive()` publishes source text unchanged with a fixed general-knowledge challenge.
+- Tables (migration `004_ai_pulse.sql`): `pulse_edition` (UNIQUE `edition_date`, UNIQUE `edition_number`, model, prompt version, input hash, selection scores), `pulse_story` (snapshot of headline, summary, source and link; `story_id` becomes NULL if retention removes the story), `pulse_challenge` (options as JSON, correct answer, explanation, type `edition` or `general`), `pulse_generation_log` (status, tokens, estimated cost, error code per attempt).
+- Endpoints: `GET /pulse/today` (current edition, else the latest one with a status, else `unavailable`), `GET /pulse/history`, `GET /pulse/{date}`, `POST /pulse/{date}/challenge/answer`, `POST /pulse/refresh` (bearer token, disabled by default).
+- Reading streaks are client-side only (`web/assets/streak.js`).
+
 ## 4. Data schema
 
 ```sql

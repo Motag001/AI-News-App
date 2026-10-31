@@ -5,7 +5,7 @@ import re
 from shared.categories import CATEGORIES
 
 KEYWORDS = {
-    "Robotics": r"\b(robot\w*|humanoid\w*|drone\w*|manipulat\w+|quadruped\w*|exoskeleton\w*|autonomous (vehicle|driving)\w*|self-driving|warehouse automation)\b",
+    "Robotics": r"\b(robot(?!s\.txt)\w*|humanoid\w*|drone\w*|manipulat\w+|quadruped\w*|exoskeleton\w*|autonomous (vehicle|driving)\w*|self-driving|warehouse automation)\b",
     "Policy": r"\b(regulat\w+|legislat\w+|\blaw\w*|senate|congress|parliament|eu ai act|government|policy|policies|lawsuit|sues?|copyright|antitrust|ban(s|ned)?|export controls?|safety institute|governance)\b",
     "Research": r"\b(paper|preprint|arxiv|study|studies|researchers?|benchmark\w*|we propose|we present|dataset|theorem|ablation)\b",
     "AI models": r"\b(model\w*|gpt[\w-]*|gemini|claude|llama|llm\w*|chatbot\w*|diffusion|transformer\w*|multimodal|fine-tun\w+|reasoning|agents?)\b",

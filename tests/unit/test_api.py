@@ -160,6 +160,11 @@ class ApiTests(unittest.TestCase):
             main._recent_requests.clear()
         self.assertEqual(codes, [200, 200, 200, 429, 429])
 
+    def test_responses_are_cacheable_where_safe(self):
+        self.assertIn("max-age", self.get("/api/v1/stories").headers["cache-control"])
+        self.assertIn("max-age", self.get("/assets/app.css").headers["cache-control"])
+        self.assertNotIn("cache-control", self.get("/api/v1/health").headers)
+
     def test_zz_failed_fetch_backs_off_and_keeps_stories(self):
         def broken(*_):
             raise FetchError("Network error: ConnectError.")

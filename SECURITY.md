@@ -57,6 +57,14 @@ Controls:
 - Summaries display the source link and the story is always traceable to its items.
 - Prompt versions and model names are recorded with every output.
 
+### 5.1 AI Pulse specifics
+- The OpenAI key is read from the environment on the server only; it is never sent to the browser, logged or stored. Error records keep a short code, never a response body.
+- Story text is delimited and labelled untrusted; delimiter tokens are stripped from it; stories matching injection patterns (or containing the delimiters) are kept out of the model input.
+- Model output is rejected, not repaired, unless it matches the strict schema; markup is stripped and links are refused. The model never sets scores or chooses story order.
+- Public endpoints take no free-form input that reaches the model. The only generation a visitor can cause is the single once-per-day build, bounded by a daily attempt cap, back-off, a process lock and the UNIQUE edition date. `POST /pulse/refresh` needs `PULSE_ADMIN_TOKEN` (constant-time comparison) and is off when unset.
+- The correct challenge answer is never sent to the browser before an answer is submitted.
+- No visitor data is stored server-side; streaks live in the visitor's own `localStorage`.
+
 ## 6. Input validation
 
 - All API inputs validated with schema models (types, ranges, enums, maximum lengths).

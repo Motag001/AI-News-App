@@ -66,6 +66,11 @@ Navigation: top bar with logo, Dashboard, Categories menu, Settings, and sign-in
 - Table of sources with status, last run time and last result.
 - Manual "Run ingest" button per source with confirmation.
 
+### 3.8 AI Pulse
+- Homepage: a preview card above the filters (label "Today's Edition", introduction, top three headlines, reading time, streak, "Read Today's Briefing").
+- `/pulse`: editorial masthead ("N stories. M minutes. Stay ahead."), date, edition number and reading time; the introduction; numbered story sections with source link and "why it matters"; the Daily AI Challenge (radio group, result announced in a live region, correct/incorrect shown with text and symbols, not colour alone); the reading streak with a 14-day indicator and a note that it is stored on this device only; previous/next edition links and an archive list.
+- Serif headlines, hairline rules and one accent colour, no decorative effects; it follows the light/dark tokens and `prefers-reduced-motion`.
+
 ## 4. Visual design
 
 ### 4.1 Colour

@@ -74,6 +74,7 @@ class IntelligenceTests(unittest.TestCase):
         self.assertEqual(classify("Humanoid robot learns to walk", "")[0], "Robotics")
         self.assertEqual(classify("EU lawmakers pass new AI regulation", "")[0], "Policy")
         self.assertEqual(classify("A thing happened", "")[0], "Industry")
+        self.assertNotEqual(classify("Websites can express AI training preferences", "A shared robots.txt signal")[0], "Robotics")
         self.assertEqual(classify("Neural thickets", "We propose a method", "Research")[0], "Research")
 
     def test_title_similarity(self):

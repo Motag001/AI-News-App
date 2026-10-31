@@ -190,6 +190,12 @@ function renderDashboard(category = null) {
     }
   }).catch(() => {});
 
+  if (!category) {
+    const pulseSlot = element("div", "pulse-slot");
+    body.append(pulseSlot);
+    renderPulsePreview(pulseSlot);
+  }
+
   const toolbar = element("form", "toolbar");
   toolbar.id = "filters";
   toolbar.setAttribute("aria-label", "Filter stories");
@@ -495,6 +501,7 @@ function setupTheme() {
   }
   const path = window.location.pathname;
   if (path === "/settings") document.querySelector("#nav-settings").setAttribute("aria-current", "page");
+  else if (path === "/pulse" || path.startsWith("/pulse/")) document.querySelector("#nav-pulse").setAttribute("aria-current", "page");
   else if (path === "/") document.querySelector("#nav-home").setAttribute("aria-current", "page");
   themeButton.addEventListener("click", () => {
     const currentTheme = document.documentElement.dataset.theme
@@ -516,7 +523,9 @@ function safeExternalUrl(value) {
 
 const pathname = decodeURIComponent(window.location.pathname);
 setupTheme();
-if (pathname === "/settings") {
+if (pathname === "/pulse" || pathname.startsWith("/pulse/")) {
+  renderPulsePage(pathname === "/pulse" ? null : pathname.slice("/pulse/".length));
+} else if (pathname === "/settings") {
   renderSettings();
 } else if (pathname.startsWith("/story/")) {
   renderStory(pathname.slice("/story/".length));
