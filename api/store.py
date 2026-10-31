@@ -14,7 +14,11 @@ MIGRATIONS_DIR = ROOT / "migrations"
 
 
 def database_path() -> Path:
-    return Path(os.getenv("DATABASE_PATH", str(ROOT / "data" / "ai_news.db")))
+    if os.getenv("DATABASE_PATH"):
+        return Path(os.environ["DATABASE_PATH"])
+    if os.getenv("VERCEL"):  # serverless filesystem: only /tmp is writable and it is per-instance
+        return Path("/tmp/ai_news.db")  # nosec B108 - the only writable path on Vercel
+    return ROOT / "data" / "ai_news.db"
 
 
 @contextmanager

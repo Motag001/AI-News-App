@@ -5,7 +5,9 @@ import os
 import re
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
 
 from api.store import connection
 from shared.config.registry import Source, load_registry
@@ -23,7 +25,7 @@ MAX_ITEMS_PER_RUN = 30     # newest items per source per run
 RESCORE_DAYS = 30
 RETENTION_DAYS = int(os.getenv("RETENTION_DAYS", "30"))  # stories older than this are deleted
 NEUTRAL_REACH = 0.5        # no reach metrics are available from feeds
-DOMAIN_GAP_SECONDS = 10    # conservative default: 1 request per 10 s per domain
+DOMAIN_GAP_SECONDS = int(os.getenv("INGEST_DOMAIN_GAP_SECONDS", "10"))  # 1 request per 10 s per domain by default
 _last_request_by_host: dict[str, float] = {}
 
 
@@ -207,9 +209,21 @@ def run_due(fetch=guarded_get) -> dict[str, str]:
         due = due_sources(database, sources, now)
     with connection() as database:
         purge_expired(database, now)
-    results = {}
+    with connection() as database:
+        purge_expired(database, now)
+    # Sources on the same host run one after another (rate limit); different hosts run in parallel.
+    groups: dict[str, list[Source]] = {}
     for source in due:
-        results[source.id] = ingest_source(source, fetch=fetch)
+        groups.setdefault(urlsplit(source.url).hostname or source.id, []).append(source)
+    results: dict[str, str] = {}
+
+    def run_group(group: list[Source]) -> None:
+        for source in group:
+            results[source.id] = ingest_source(source, fetch=fetch)
+
+    if groups:
+        with ThreadPoolExecutor(max_workers=min(len(groups), 6)) as pool:
+            list(pool.map(run_group, groups.values()))
     if results:
         with connection() as database:
             rescore(database, datetime.now(timezone.utc))

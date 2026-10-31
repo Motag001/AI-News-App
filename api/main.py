@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 import re
+import threading
 import time
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
@@ -12,7 +13,7 @@ from pathlib import Path
 from typing import Literal
 from urllib.parse import quote, urlencode, urlsplit
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -27,7 +28,11 @@ from workers.ingest.run import run_due
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB_ROOT = ROOT / "web"
-APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:8000").rstrip("/")
+ON_VERCEL = bool(os.getenv("VERCEL"))
+_vercel_host = os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
+APP_BASE_URL = os.getenv(
+    "APP_BASE_URL", f"https://{_vercel_host}" if _vercel_host else "http://localhost:8000"
+).rstrip("/")
 STORY_ID_PATTERN = re.compile(r"^[a-z0-9-]{1,80}$")
 parsed_app_url = urlsplit(APP_BASE_URL)
 if (
@@ -61,7 +66,7 @@ async def ingest_loop() -> None:
 async def lifespan(_: FastAPI):
     initialise_database()
     task = None
-    if os.getenv("INGEST_ENABLED", "true").lower() != "false":
+    if not ON_VERCEL and os.getenv("INGEST_ENABLED", "true").lower() != "false":
         task = asyncio.create_task(ingest_loop())
     yield
     if task:
@@ -99,10 +104,8 @@ async def validation_problem(_: Request, exc: RequestValidationError) -> JSONRes
     return problem(422, "Invalid request", f"Check these parameters: {fields}.")
 
 
-ALLOWED_HOSTS = [
-    host.strip() for host in os.getenv("ALLOWED_HOSTS", f"localhost,127.0.0.1,{parsed_app_url.hostname}").split(",")
-    if host.strip()
-]
+_default_hosts = f"localhost,127.0.0.1,{parsed_app_url.hostname}" + (",*.vercel.app" if ON_VERCEL else "")
+ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", _default_hosts).split(",") if host.strip()]
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)  # blocks Host-header spoofing
 
 RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "120"))
@@ -201,6 +204,27 @@ def row_to_summary(row) -> dict:
     }
 
 
+REFRESH_INTERVAL_SECONDS = 15 * 60
+_refresh_lock = threading.Lock()
+_last_refresh = 0.0
+
+
+def refresh_if_stale() -> None:
+    """Serverless has no background worker: fetch due sources on demand, at most every 15 minutes per instance."""
+    global _last_refresh
+    if not ON_VERCEL or time.monotonic() - _last_refresh < REFRESH_INTERVAL_SECONDS:
+        return
+    with _refresh_lock:  # concurrent first visitors wait for one refresh instead of starting several
+        if time.monotonic() - _last_refresh < REFRESH_INTERVAL_SECONDS:
+            return
+        try:
+            initialise_database()
+            run_due()
+            _last_refresh = time.monotonic()
+        except Exception:
+            log.exception("on-demand refresh failed")
+
+
 @app.get("/api/v1/health")
 def health() -> dict:
     with connection() as database:
@@ -230,6 +254,7 @@ def categories() -> list[dict[str, int | str]]:
 
 @app.get("/api/v1/stories", response_model=StoryList)
 def list_stories(
+    _: None = Depends(refresh_if_stale),
     category: str | None = Query(default=None, max_length=40),
     date_range: Literal["24h", "7d", "30d"] = "7d",
     min_credibility: Literal["all", "medium", "high"] = "all",
