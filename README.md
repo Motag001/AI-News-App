@@ -58,6 +58,20 @@ Environment variables (all optional; see `.env.example`): `OPENAI_API_KEY`, `OPE
 
 Tests: `python -m unittest discover -s tests -v` also runs the streak tests with Node.js (`node --test tests/js/streak.test.js`).
 
+## Install on Android (mobile app)
+
+The site is an installable app (a Progressive Web App): it gets a home-screen icon, opens full screen without the browser bar, and shows the last saved stories when offline.
+
+1. On your Android phone, open **https://ai-news-app-josh-ddeveloper.vercel.app** in Chrome.
+2. Tap the menu (⋮) and choose **Install app** (or **Add to Home screen**). A small **Install app** button also appears in the page footer when Chrome allows it.
+3. Open **Signal AI** from the home screen. Long-press the icon for the *AI Pulse* and *Latest stories* shortcuts.
+
+What is included: `web/manifest.webmanifest` (name, icons, shortcuts), `web/sw.js` (offline shell and saved stories; never caches POST requests or other sites), `web/assets/pwa.js` (install button and offline notice), and PNG icons in `web/assets/icons/` (regenerate with `python tools/make_icons.py`). It needs HTTPS, which Vercel provides.
+
+**Offline limits:** only pages and stories you have already opened are available offline. Challenge answers need a connection. Install data lives in the browser, so clearing site data removes it.
+
+**A real APK file (optional):** Android does not need one to install the app, but to get an `.apk`/`.aab` (for sideloading or Google Play) paste the site URL into [pwabuilder.com](https://www.pwabuilder.com), choose *Package for Android* and download the signed package. PWABuilder creates the signing key; keep it safe, because Play updates must be signed with the same key. For full-screen mode without a URL bar in that package, host the `assetlinks.json` file PWABuilder gives you at `/.well-known/assetlinks.json`. Sideloading needs "Install unknown apps" enabled; Play needs a Google developer account (one-time fee).
+
 ## API examples
 
 With the server running, use these URLs in a browser or request them from PowerShell:

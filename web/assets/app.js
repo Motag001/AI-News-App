@@ -474,6 +474,18 @@ function renderSettings() {
     message.textContent = "Preferences saved in this browser.";
   });
   body.append(form);
+  const install = element("section", "install-card");
+  install.setAttribute("aria-labelledby", "install-title");
+  const installTitle = element("h2", "", "Install on your phone");
+  installTitle.id = "install-title";
+  const steps = element("ol", "");
+  for (const step of [
+    "Open this site in Chrome on your Android phone.",
+    "Tap the menu (⋮), then Install app (or Add to Home screen).",
+    "Open Signal AI from your home screen. It runs full screen and shows saved stories when you are offline.",
+  ]) steps.append(element("li", "", step));
+  install.append(installTitle, steps);
+  body.append(install);
 }
 
 function radioGroup(title, name, options, selected) {

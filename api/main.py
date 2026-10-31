@@ -395,6 +395,23 @@ def share_links(story_id: str) -> dict[str, str]:
     }
 
 
+@app.get("/sw.js", include_in_schema=False)
+def service_worker() -> FileResponse:
+    """Served from the root so it can control the whole site; never cached so updates ship immediately."""
+    return FileResponse(
+        WEB_ROOT / "sw.js", media_type="text/javascript",
+        headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"},
+    )
+
+
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def web_manifest() -> FileResponse:
+    return FileResponse(
+        WEB_ROOT / "manifest.webmanifest", media_type="application/manifest+json",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 @app.get("/", include_in_schema=False)
 @app.get("/story/{story_id}", include_in_schema=False)
 @app.get("/category/{category}", include_in_schema=False)

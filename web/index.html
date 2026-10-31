@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A source-linked view of important AI, robotics and technology developments.">
     <meta name="theme-color" content="#1d4ed8">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Signal AI">
     <title>AI News Platform</title>
     <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
     <meta property="og:type" content="website">
@@ -13,12 +18,14 @@
     <meta name="twitter:card" content="summary">
     <link rel="stylesheet" href="/assets/app.css">
     <link rel="stylesheet" href="/assets/pulse.css">
+    <script src="/assets/pwa.js" defer></script>
     <script src="/assets/streak.js" defer></script>
     <script src="/assets/pulse.js" defer></script>
     <script src="/assets/app.js" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
+    <p id="offline-banner" class="offline-banner" role="status" hidden>You are offline. Showing the last stories saved on this device.</p>
     <header class="site-header">
       <div class="header-inner">
         <a class="brand" href="/" aria-label="AI News Platform home"><span class="brand-mark" aria-hidden="true">✦</span> Signal / AI</a>
@@ -34,7 +41,7 @@
     <footer class="site-footer">
       <div class="footer-inner">
         <p>AI News Platform · Stories link to their original sources</p>
-        <p>Excerpts only. Always check the original source.</p>
+        <p>Excerpts only. Always check the original source. <button type="button" id="install-app" class="install-app" hidden>Install app</button></p>
       </div>
     </footer>
   </body>
